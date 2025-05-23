@@ -83,7 +83,7 @@ def main():
             movie = movies[path[i + 1][0]]["title"]
             print(f"{i + 1}: {person1} and {person2} starred in {movie}")
 
-# 1 , 4
+
 def shortest_path(source, target):
     """
     Returns the shortest list of (movie_id, person_id) pairs
@@ -91,37 +91,43 @@ def shortest_path(source, target):
 
     If no possible path, returns None.
     """
-    
-    start = Node(state=source, parent=None, action=None, cost=0)
+
+    start = Node(state=source, parent=None, action=None)
     frontier = QueueFrontier()
-    frontier.add(start, prio=0)
+    frontier.add(start)
 
     explored = set()
-    print(source)
 
-    while not frontier.empty():
+    while True:
+
+        if frontier.empty():
+            return None
+        
         node = frontier.remove()
 
-        if node.state == target:
-            path = []
-            while node.parent is not None:
-                path.append((node.action, node.state))
-                node = node.parent
-            path.reverse()
-            return path
         explored.add(node.state)
+            
+        for action, state in neighbors_for_person(node.state):
+            if not frontier.contains_state(state) and state not in explored:
+                child = Node(state=state, parent=node, action=action)
 
-        for movie_id, person_id in neighbors_for_person(node.state):
-            if not frontier.contains_state(person_id) and person_id not in explored:
-                cost = node.cost + 1
-                child = Node(state=person_id, parent=node, action=movie_id, cost=cost)
-                frontier.add(child, prio=cost)
+                solution = check_solution(child, target)
+                if solution is not None:
+                    return solution
+                else:
+                    frontier.add(child)
         
+
+def check_solution(node, target):
+    if node.state == target:
+        path = []
+
+        while node.parent is not None:
+            path.append((node.action, node.state))
+            node = node.parent
+        path.reverse()
+        return path
     return None
-
-    # TODO
-    raise NotImplementedError
-
 
 def person_id_for_name(name):
     """
@@ -164,6 +170,3 @@ def neighbors_for_person(person_id):
 
 if __name__ == "__main__":
     main()
-
-# Rafael Sánchez Navarro
-# Regina Orozco
